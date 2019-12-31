@@ -21,14 +21,37 @@ class AppWindow(QtWidgets.QMainWindow):
         self.popup.showgrayImg()
         self.popup.show()
     def pushButton21_Click(self):
-        self.popup211 = AppPopup()
-        self.popup211.setGeometry(200, 200, 600, 600)
-        self.popup211.showVideo()
-        self.popup211.show()
-        self.popup212 = AppPopup()
-        self.popup212.setGeometry(600, 200, 600, 600)
-        self.popup212.bgsub()
-        self.popup212.show()
+        capture = cv.VideoCapture('input/bgSub.mp4')
+        # check if it's ready to be read
+        while not capture.isOpened():
+            capture = cv.VideoCapture('bgSub.mp4')
+            cv.waitKey(1000)
+            print('Wait for the header')
+        # current frame
+        pos_frame = capture.get(cv.CAP_PROP_POS_FRAMES)
+        # background subtractor object
+        backSub = cv.createBackgroundSubtractorMOG2(history=50, varThreshold=190, detectShadows=False)
+        while True:
+            # read a frame
+            ret, frame = capture.read()
+            if ret:
+                # apply subtractor
+                fgMask = backSub.apply(frame)
+                cv.imshow('Origin', frame)
+                cv.imshow('Foreground', fgMask)
+            else:
+                capture.set(cv.CAP_PROP_POS_FRAMES, pos_frame - 1)
+                print('frame is not ready')
+                cv.waitKey(1000)
+            keyboard = cv.waitKey(30)
+            if keyboard == 'q' or keyboard == 27:
+                break
+            # if the end of video, break
+            if capture.get(cv.CAP_PROP_POS_FRAMES) == capture.get(cv.CAP_PROP_FRAME_COUNT):
+                print(capture.get(cv.CAP_PROP_FRAME_COUNT))
+                break
+        capture.release()
+        cv.destroyAllWindows()
 
 class Communicate(QObject):
     signal = pyqtSignal(str)
