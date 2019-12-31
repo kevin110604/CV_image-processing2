@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'myui.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.1
+# Created by: PyQt5 UI code generator 5.14.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(700, 200)
+        MainWindow.resize(700, 500)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.okButton = QtWidgets.QPushButton(self.centralwidget)
@@ -49,6 +49,9 @@ class Ui_MainWindow(object):
         self.pushButton21 = QtWidgets.QPushButton(self.groupBox_2)
         self.pushButton21.setGeometry(QtCore.QRect(10, 30, 113, 32))
         self.pushButton21.setObjectName("pushButton21")
+        self.label_7 = QtWidgets.QLabel(self.centralwidget)
+        self.label_7.setGeometry(QtCore.QRect(90, 190, 391, 211))
+        self.label_7.setObjectName("label_7")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 700, 22))
@@ -75,3 +78,4 @@ class Ui_MainWindow(object):
         self.pushButton41.setText(_translate("MainWindow", "4.1"))
         self.groupBox_2.setTitle(_translate("MainWindow", "2. Background Subtraction"))
         self.pushButton21.setText(_translate("MainWindow", "2.1"))
+        self.label_7.setText(_translate("MainWindow", "TextLabel"))
