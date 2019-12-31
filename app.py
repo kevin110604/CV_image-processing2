@@ -67,15 +67,29 @@ class Thread2(QThread):
         while True:
             ret, frame = cap.read()
             if ret:
-                backSub = cv.createBackgroundSubtractorMOG2(history=50, varThreshold=190, detectShadows=False)
-                fgMask = backSub.apply(frame)
-                cv.rectangle(frame, (10, 2), (100,2), (255,255,255), -1)
-                cv.putText(frame, str(cap.get(cv.CAP_PROP_POS_FRAMES)), (15, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
+                print(frame.shape)
+                backSub = cv.createBackgroundSubtractorKNN(history=500, dist2Threshold=400, detectShadows=False)
+                frameImage = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+                # frameImage = frame
+                print(frameImage.shape)
+                fgMask = backSub.apply(frameImage)
+                print('fgMask', fgMask.shape)
+                # Get the frame number and write it on the current frame
+                # cv.rectangle(frame, (20, 20), (300,140), (255,255,255), -1)
+                # cv.putText(frame, str(cap.get(cv.CAP_PROP_POS_FRAMES)), (150, 150), cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
                 # Covert to Qimg
-                rgbImage = cv.cvtColor(fgMask, cv.COLOR_BGR2RGB)
-                h, w, ch = rgbImage.shape
-                bytesPerLine = ch * w
-                convertToQtFormat = QImage(rgbImage.data, w, h, bytesPerLine, QImage.Format_RGB888)
+                # frameImage = cv.cvtColor(frame, cv.IMREAD_GRAYSCALE)
+                # frameImage = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+                # fgImage = cv.cvtColor(fgMask, cv.COLOR_BGR2RGB)
+                # fgImage = cv.cvtColor(fgMask, cv.IMREAD_GRAYSCALE)
+                fgImage = fgMask
+                Img = frameImage - fgImage
+                # Img = fgImage
+                h, w = Img.shape
+                
+                bytesPerLine = w
+                # convertToQtFormat = QImage(frameImage.data, w, h, bytesPerLine, QImage.Format_RGB888) QImage.Format_Grayscale8
+                convertToQtFormat = QImage(Img.data, w, h, bytesPerLine, QImage.Format_Grayscale8)
                 p = convertToQtFormat.scaled(320, 176, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 self.changePixmap.emit(p)
                 # Sleep
@@ -129,13 +143,13 @@ class AppPopup(QtWidgets.QWidget):
         self.label.setGeometry(0, 0, 320, 176)
         th = Thread(self)
         th.changePixmap.connect(self.setImage)
-        th.set_fps(40)
+        th.set_fps(60)
         th.start()
     def bgsub(self):
         self.label.setGeometry(0, 0, 320, 176)
         th = Thread2(self)
         th.changePixmap.connect(self.setImage)
-        th.set_fps(40)
+        th.set_fps(60)
         th.start()
     @pyqtSlot(QImage)
     def setImage(self, image):
