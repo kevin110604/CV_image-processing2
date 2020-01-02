@@ -26,20 +26,20 @@ class AppWindow(QtWidgets.QMainWindow):
         self.popup.show()
     def pushButton21_Click(self):
         capture = cv.VideoCapture('input/bgSub.mp4')
-        # check if it's ready to be read
+        # Check if it's ready to be read
         while not capture.isOpened():
             capture = cv.VideoCapture('input/bgSub.mp4')
             cv.waitKey(1000)
             print('Wait for the header')
-        # current frame
+        # Current frame
         pos_frame = capture.get(cv.CAP_PROP_POS_FRAMES)
-        # background subtractor object
+        # Background subtractor object
         backSub = cv.createBackgroundSubtractorMOG2(history=50, varThreshold=190, detectShadows=False)
         while True:
-            # read a frame
+            # Read a frame
             ret, frame = capture.read()
             if ret:
-                # apply subtractor
+                # Apply subtractor
                 fgMask = backSub.apply(frame)
                 cv.imshow('Origin', frame)
                 cv.imshow('Foreground', fgMask)
@@ -50,7 +50,7 @@ class AppWindow(QtWidgets.QMainWindow):
             keyboard = cv.waitKey(30)
             if keyboard == 'q' or keyboard == 27:
                 break
-            # if the end of video, break
+            # End of the video
             if capture.get(cv.CAP_PROP_POS_FRAMES) == capture.get(cv.CAP_PROP_FRAME_COUNT):
                 print(capture.get(cv.CAP_PROP_FRAME_COUNT))
                 break
@@ -84,7 +84,7 @@ class AppWindow(QtWidgets.QMainWindow):
             # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
             img_keypoints = cv.drawKeypoints(frame, keypoints, np.array([]), (0, 0, 255), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
             # Show keypoints
-            cv.imshow("Keypoints", img_keypoints)
+            cv.imshow('Keypoints', img_keypoints)
             keyboard = cv.waitKey(1)
             if keyboard == 'q' or keyboard == 27:
                 break
@@ -139,7 +139,7 @@ class AppWindow(QtWidgets.QMainWindow):
         mask = np.zeros_like(frame)
 
         while True:
-            # Read the frame
+            # Read a frame
             ret, frame = capture.read()
             if not ret:
                 break
@@ -160,6 +160,10 @@ class AppWindow(QtWidgets.QMainWindow):
             cv.imshow('Optical flow', img)
             keyboard = cv.waitKey(1)
             if keyboard == 'q' or keyboard == 27:
+                break
+            # End of the video
+            if capture.get(cv.CAP_PROP_POS_FRAMES) == capture.get(cv.CAP_PROP_FRAME_COUNT):
+                print(capture.get(cv.CAP_PROP_FRAME_COUNT))
                 break
             # Now update the previous frame and previous points
             old_gray = frame_gray.copy()
