@@ -26,7 +26,7 @@ class AppWindow(QtWidgets.QMainWindow):
         capture = cv.VideoCapture('input/bgSub.mp4')
         # check if it's ready to be read
         while not capture.isOpened():
-            capture = cv.VideoCapture('bgSub.mp4')
+            capture = cv.VideoCapture('input/bgSub.mp4')
             cv.waitKey(1000)
             print('Wait for the header')
         # current frame
@@ -180,6 +180,10 @@ class AppPopup(QtWidgets.QWidget):
         imgR = cv.imread('input/imR.png', cv.IMREAD_GRAYSCALE)
         stereo = cv.StereoBM_create(numDisparities=64, blockSize=9)
         self.img = stereo.compute(imgL, imgR)
+        self.img -= self.img.min()
+        self.img = np.divide(self.img, self.img.max())
+        self.img = np.multiply(self.img, 255)
+        self.img = self.img.astype(np.uint8)
     def showVideo(self):
         self.label.setGeometry(0, 0, 320, 176)
         th = Thread(self)
