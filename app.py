@@ -15,6 +15,8 @@ class AppWindow(QtWidgets.QMainWindow):
         # Connection btw events & functions
         self.ui.pushButton11.clicked.connect(self.pushButton11_Click)
         self.ui.pushButton21.clicked.connect(self.pushButton21_Click)
+        self.ui.pushButton31.clicked.connect(self.pushButton31_Click)
+        self.ui.pushButton32.clicked.connect(self.pushButton32_Click)
         self.ui.pushButton41.clicked.connect(self.pushButton41_Click)
     def pushButton11_Click(self):
         self.popup = AppPopup()
@@ -52,6 +54,116 @@ class AppWindow(QtWidgets.QMainWindow):
             if capture.get(cv.CAP_PROP_POS_FRAMES) == capture.get(cv.CAP_PROP_FRAME_COUNT):
                 print(capture.get(cv.CAP_PROP_FRAME_COUNT))
                 break
+        capture.release()
+        cv.destroyAllWindows()
+    def pushButton31_Click(self):
+        capture = cv.VideoCapture('input/featureTracking.mp4')
+        while True:
+            ret, frame = capture.read()
+            # Setup SimpleBlobDetector parameters.
+            params = cv.SimpleBlobDetector_Params()
+            # Change thresholds
+            params.minThreshold = 90
+            params.maxThreshold = 120
+            # Filter by Area.
+            # params.filterByArea = True
+            # params.minArea = 50
+            # Filter by Circularity
+            params.filterByCircularity = True
+            params.minCircularity = 0.81
+            # Filter by Convexity
+            # params.filterByConvexity = True
+            # params.minConvexity = 0.9
+            # Filter by Inertia
+            # params.filterByInertia = True
+            # params.minInertiaRatio = 0.01
+            detector = cv.SimpleBlobDetector_create(params)
+            # Detect blobs.
+            keypoints = detector.detect(frame)
+            # Draw detected blobs as red circles.
+            # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
+            img_keypoints = cv.drawKeypoints(frame, keypoints, np.array([]), (0, 0, 255), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+            # Show keypoints
+            cv.imshow("Keypoints", img_keypoints)
+            keyboard = cv.waitKey(1)
+            if keyboard == 'q' or keyboard == 27:
+                break
+        capture.release()
+        cv.destroyAllWindows()
+    def pushButton32_Click(self):
+        capture = cv.VideoCapture('input/featureTracking.mp4')
+        # Read the first frame
+        ret, frame = capture.read()
+        # Setup SimpleBlobDetector parameters.
+        params = cv.SimpleBlobDetector_Params()
+        # Change thresholds
+        params.minThreshold = 90
+        params.maxThreshold = 120
+        # Filter by Area.
+        # params.filterByArea = True
+        # params.minArea = 50
+        # Filter by Circularity
+        params.filterByCircularity = True
+        params.minCircularity = 0.81
+        # Filter by Convexity
+        # params.filterByConvexity = True
+        # params.minConvexity = 0.9
+        # Filter by Inertia
+        # params.filterByInertia = True
+        # params.minInertiaRatio = 0.01
+        detector = cv.SimpleBlobDetector_create(params)
+        # Detect blobs.
+        keypoints = detector.detect(frame)
+        # Turn the point list to np array with shape (n, 1, 2)
+        p0 = np.zeros((len(keypoints), 1, 2), dtype='f')
+        p0[0, 0, 0] = keypoints[0].pt[0]
+        p0[0, 0, 1] = keypoints[0].pt[1]
+        p0[1, 0, 0] = keypoints[1].pt[0]
+        p0[1, 0, 1] = keypoints[1].pt[1]
+        p0[2, 0, 0] = keypoints[2].pt[0]
+        p0[2, 0, 1] = keypoints[2].pt[1]
+        p0[3, 0, 0] = keypoints[3].pt[0]
+        p0[3, 0, 1] = keypoints[3].pt[1]
+        p0[4, 0, 0] = keypoints[4].pt[0]
+        p0[4, 0, 1] = keypoints[4].pt[1]
+        p0[5, 0, 0] = keypoints[5].pt[0]
+        p0[5, 0, 1] = keypoints[5].pt[1]
+        p0[6, 0, 0] = keypoints[6].pt[0]
+        p0[6, 0, 1] = keypoints[6].pt[1]
+        # LK params
+        lk_params = dict(winSize = (15,15),
+                         maxLevel = 2,
+                         criteria = (cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 10, 0.03))
+        # Create a mask image for drawing purposes
+        old_gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        mask = np.zeros_like(frame)
+
+        while True:
+            # Read the frame
+            ret, frame = capture.read()
+            if not ret:
+                break
+            frame_gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+            # Calculate optical flow
+            p1, st, err = cv.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
+            # Select good points
+            good_new = p1[st==1]
+            good_old = p0[st==1]
+            # Draw the tracks
+            for i,(new,old) in enumerate(zip(good_new,good_old)):
+                a, b = new.ravel()
+                c, d = old.ravel()
+                mask = cv.line(mask, (a,b), (c,d), (0, 0, 255), 2)
+                frame = cv.circle(frame, (a,b), 5, (0, 0, 255), -1)
+            img = cv.add(frame, mask)
+            # Show the frame
+            cv.imshow('Optical flow', img)
+            keyboard = cv.waitKey(1)
+            if keyboard == 'q' or keyboard == 27:
+                break
+            # Now update the previous frame and previous points
+            old_gray = frame_gray.copy()
+            p0 = good_new.reshape(-1, 1, 2)
         capture.release()
         cv.destroyAllWindows()
     def pushButton41_Click(self):
