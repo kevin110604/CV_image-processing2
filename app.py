@@ -4,7 +4,7 @@ import numpy as np
 from myui import Ui_MainWindow    # my own ui
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot, QObject, QMutex
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot, QObject, QMutex, QTimer
 import time
 
 class AppWindow(QtWidgets.QMainWindow):
@@ -171,21 +171,9 @@ class AppWindow(QtWidgets.QMainWindow):
         capture.release()
         cv.destroyAllWindows()
     def pushButton41_Click(self):
-        self.popup411 = AppPopup()
+        self.popup411 = AppPopup(choice=2)
         self.popup411.setGeometry(100, 100, 500, 500)
-        self.popup411.ar(0)
-        self.popup412 = AppPopup()
-        self.popup412.setGeometry(200, 100, 500, 500)
-        self.popup412.ar(1)
-        self.popup413 = AppPopup()
-        self.popup413.setGeometry(300, 100, 500, 500)
-        self.popup413.ar(2)
-        self.popup414 = AppPopup()
-        self.popup414.setGeometry(400, 100, 500, 500)
-        self.popup414.ar(3)
-        self.popup415 = AppPopup()
-        self.popup415.setGeometry(500, 100, 500, 500)
-        self.popup415.ar(4)
+        self.popup411.show()
 
 class Communicate(QObject):
     signal = pyqtSignal(str)
@@ -271,11 +259,11 @@ class AppPopup(QtWidgets.QWidget):
             self.sl.setOrientation(QtCore.Qt.Horizontal)
             self.sl.valueChanged.connect(self.blend) 
         elif choice == 2:
-            self.label_pic = []
-            self.label = []
-            for i in range(10):
-                self.label_pic.append(QtWidgets.QLabel('', self))
-                self.label.append(QtWidgets.QLabel('', self))
+            self.label = QtWidgets.QLabel('', self)
+            self.timer = QTimer(self)                       # Construct QTimer 
+            self.timer.timeout.connect(self.ar)             # Run ar() when timeout
+            self.timer.start(500)                           # Start timer every 500 ms
+            self.i = 0                                      # Init index
     def showImg(self):
         # Change opencv's image to Qimage
         height, width, channel = self.img.shape
@@ -315,7 +303,7 @@ class AppPopup(QtWidgets.QWidget):
     @pyqtSlot(QImage)
     def setImage(self, image):
         self.label.setPixmap(QPixmap.fromImage(image))
-    def ar(self, i):
+    def ar(self):
         # Coordinates of the pyramid
         tmp = [[3, 3, -4], [1, 1, 0], [1, 5, 0], [5, 5, 0], [5, 1, 0]]
         coordinates = np.array(tmp, dtype='f')
@@ -350,11 +338,11 @@ class AppPopup(QtWidgets.QWidget):
                [ 0.438675, -0.023028,  0.898350, 16.240692]]
         extrinsic.append(np.array(tmp))
         # Read the img file
-        path = 'input/' + str(i+1) + '.bmp'
+        path = 'input/' + str(self.i+1) + '.bmp'
         img = cv.imread(path, cv.IMREAD_COLOR)
         # Project the pyramid to image plane
-        rotation = extrinsic[i][:, :3]
-        translation = extrinsic[i][:, 3]
+        rotation = extrinsic[self.i][:, :3]
+        translation = extrinsic[self.i][:, 3]
         points, jacobian = cv.projectPoints(coordinates, rotation, translation, intrinsic, distortion)
         # Draw the base of the pyramid
         cv.line(img, (points[1][0][0], points[1][0][1]), (points[2][0][0], points[2][0][1]), (0, 0, 255), 5)
@@ -375,6 +363,11 @@ class AppPopup(QtWidgets.QWidget):
         # Show Qimage
         self.label.setGeometry(0, 0, width, height)
         self.label.setPixmap(QPixmap.fromImage(self.qImg))
+        # Increment
+        if self.i < 4:
+            self.i += 1
+        else:
+            self.i = 0
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
